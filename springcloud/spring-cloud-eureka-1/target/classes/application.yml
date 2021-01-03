@@ -1,0 +1,17 @@
+server:
+  port: 8762
+
+eureka:
+  instance:
+    hostname: localhost
+  client:
+    register-with-eureka: true  #true代表注册到Eureka列表
+    fetch-registry: true
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/,http://localhost:8762/eureka/  #指向服务注册中心的地址
+  server:
+    enable-self-preservation: true  # false是关闭自我保护机制
+    # wait-time-in-ms-when-sync-empty: 10000 #设置 eureka server同步失败的等待时间默认5分,在这期间，它不向客户端提供服务注册信息
+spring:
+  application:
+    name: cloud-eureka-eureka-1
