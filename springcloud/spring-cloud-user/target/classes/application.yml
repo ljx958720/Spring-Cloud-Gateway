@@ -1,0 +1,53 @@
+server:
+  port: 8090
+
+eureka:
+  instance:
+    hostname: localhost
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/,http://localhost:8762/eureka/  #指向服务注册中心的地址
+
+spring:
+  application:
+    name: spring-cloud-user
+#开启feign的支持,触发降级的策略
+feign:
+  hystrix:
+    enabled: true
+hystrix:
+  command:
+    default:  #全局配置， feignclient#method(param)
+      execution:
+        timeout:
+          enable: true  #超时的开启
+        isolation:
+          thread:
+            timeoutInMilliseconds: 3000  #设置超时时间
+    #以下是线程池隔离策略
+    UserFeignClient#query():
+      execution:
+        isolation:
+          strategy: SEMAPHORE
+          semaphore:
+            maxConcurrentRequests: 10  #线程最大数
+      UserFeignClient#insert():
+        execution:
+          isolation:
+            strategy: THREAD
+      threadpool:
+        spring-cloud-service:
+          coreSize: 2
+          maxQueueSize: 1000  #最大队列数
+          queueSizeRejectionThreshold:  800  #超过800拒绝
+
+#设置ribbon的超时时间，而且ribbon的超时时间一定要大于hystrix，这样才能让hystrix生效
+ribbon:
+  ReadTimeout: 10000
+  ConnectTimeout: 10000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: refresh,hystrix.stream

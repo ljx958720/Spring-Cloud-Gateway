@@ -1,0 +1,22 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: spring-cloud-service
+  cloud:
+    bus:
+      enabled: true
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: spring-cloud-service
+
+
+#提供refresh端点进行主动刷新;这个刷新比较鸡肋，因为要手动刷新，比喻8080端口的配置发生了改变，那么就要用工具发动POST请求访问
+#http://localhost:8080/actuator/refresh路径进行手动刷新远程配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: refresh,hystrix.stream

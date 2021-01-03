@@ -1,0 +1,3 @@
+com\ghy\service\serviceFeign\FeignClient\UserFeignClient$UserFeignClientFallback.class
+com\ghy\service\serviceFeign\FeignClient\UserFeignClient.class
+com\ghy\service\serviceFeign\UserService.class

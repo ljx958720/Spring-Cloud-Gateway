@@ -1,0 +1,47 @@
+server:
+  port: 9091
+
+eureka:
+  instance:
+    hostname: localhost
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/,http://localhost:8762/eureka/  #指向服务注册中心的地址
+
+spring:
+  application:
+    name: spring-cloud-config
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/ljx958720/synthesisCloudProperties  #远程配置GIT仓库地址
+          force-pull: true #强制从远程GIT仓库拉取数据到本地
+          search-paths: /**  #配置文件所在的目录
+          #default-label: master
+          username: ***
+          password: ***
+#下面是Spring Cloud Bus总线配置
+#配置消息总线BUS;开放一个外部端口，用来刷新缓存
+#如果git信息更改我们可以通过访问http://localhost:9091/actuator/bus-refresh 进行广播更新，但是这种广播要手动操作，可以在git上的webhooks进行配置自动
+#但是这个方式还是有个问题，webhooks在解析时会报错无法解析，导入spring-cloud-config-monitor，包；访问http://localhost:9091/monitor?path=*;其中参数用JSON格式
+    bus:
+      enabled: true
+      trace:
+        enabled: true
+      refresh:
+        enabled: true
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: config-server
+
+
+#提供refresh端点进行主动刷新;这个刷新比较鸡肋，因为要手动刷新，比喻8080端口的配置发生了改变，那么就要用工具发动POST请求访问
+#http://localhost:8080/actuator/refresh路径进行手动刷新远程配置
+#Spring Cloud Bus必配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: bus-refresh
