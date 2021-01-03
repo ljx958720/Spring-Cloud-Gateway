@@ -1,0 +1,75 @@
+server:
+  port: 9100
+spring:
+  application:
+    name: spring-cloud-gateway
+  cloud:
+    gateway:
+      routes:
+        - id: config_route
+          predicates:
+            - Path=/service/**
+          filters:   #过滤
+            - Ghy=ghy
+            - StripPrefix=1  #这个必加不加他在访问子服务时会把service也带进去，路径就变成了http://localhost:8080/service/user,无法匹配了
+          uri: http://localhost:8080/
+        #下面是关于cookie的断言
+        - id: cookie_route
+          predicates:
+            - Path=/cookie/**
+            - Cookie=chocolate, ch.p #如果chocolate带了ch.p表示为true,表示满足条件要进行路由了
+          filters:   #过滤
+            - StripPrefix=1  #这个必加不加他在访问子服务时会把service也带进去，路径就变成了http://localhost:8080/service/user,无法匹配了
+          uri: https://www.baidu.com/  #这是路由的地址
+        #下面是关于自定义的断言
+        - id: ghy_route
+          predicates:
+            - Path=/ghy/**
+            - Ghy=ghy, ch.p #因为自定义的类名是GhyRoutePredicateFactory所以前缀是Ghy
+          filters:   #过滤
+             - StripPrefix=1  #这个必加不加他在访问子服务时会把service也带进去，路径就变成了http://localhost:8080/service/user,无法匹配了
+          uri: https://www.baidu.com/  #这是路由的地址
+
+        - id: lb_route
+          predicates:
+            - Path=/ghy/**
+          filters:
+            - StripPrefix=1
+          uri: lb://spring-cloud-service
+        #网关限流配置
+        - id: requestratelimiter_route
+          predicates:
+            - Path=/requestratelimiter/**
+          filters:
+            - StripPrefix=1
+            - name: RequestRateLimiter
+              args:
+                deny-empty-key: true  #key为空时，是否拒绝，key是指限流标记需要自己写代码去实现KeyResolver
+                keyResolver: '#{@ghyKeyResolver}'
+                redis-rate-limiter.replenishRate: 10 #令牌桶中令牌的填充速度，代表允许每秒执行的请求数。
+                redis-rate-limiter.burstCapacity: 20 #令牌桶的容量，也就是令牌桶最多能够容纳的令牌数。表示每秒用户最大能够执行的请求数量。
+                redis-rate-limiter.requestedTokens: 1
+          uri: lb://spring-cloud-service
+
+      #下面是路由解析器配置
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+  #用redis存令牌
+  redis:
+    host: localhost
+    port: 6379
+
+eureka:
+  instance:
+    hostname: localhost
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/,http://localhost:8762/eureka/  #指向服务注册中心的地址
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
